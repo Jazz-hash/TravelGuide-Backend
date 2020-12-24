@@ -12,31 +12,34 @@ distance:
     multiple: false
     type: Text
 """
-# description:
-#     css: 'div[class="mw-parser-output"]'
-#     xpath: null
-#     multiple: false
-#     type: Text
 
-#  css: 'img[class="wpb-banner-image"]'
-#     xpath: null
-#     multiple: false
-#     type: Attribute
-#     attribute: src
-city_yml = """
+location_yml = """
 description:
-    css: 'div[class="mod"]'
+    css: 'div[class="BNeawe s3v9rd AP7Wnd"]'
+    xpath: null
+    multiple: false
+    type: Text
+more_description:
+    css: 'div[class="vbShOe kCrYT"]'
     xpath: null
     multiple: false
     type: Text
 """
 
+videos_yml = """
+videos:
+    css: 'div[class="style-scope ytd-item-section-renderer"]'
+    xpath: null
+    multiple: false
+    type: Text
+"""
 
 @app.route('/', methods=['GET'])
 def home():
     return """<h1>TravelGuide-Backend</h1><p>URLs:<br /> 
     <a href='/api/v1/distance?city_1=Karachi&city_2=Sialkot'>Distance (modify city_1 and city_2 in the URL to change cities)</a><br />
-    <a href='/api/v1/weather?city=Karachi'>Weather (modify city in the URL to change city)</a>
+    <a href='/api/v1/weather?city=Karachi'>Weather (modify city in the URL to change city)</a><br/>
+    <a href='/api/v1/location-info?location=Quaid e azam tomb'>Location information (modify location in the URL to change city)</a>
     </p>"""
 
 
@@ -72,7 +75,7 @@ def get_distance():
 
 @app.route('/api/v1/weather', methods=['GET'])
 def get_weather():
-    city_name = "Karachi"
+    city_name = request.args.get('city')
     URL = "http://api.openweathermap.org/data/2.5/weather?q=" + city_name + "&appid=ab1511265be0e3512b8a68c06a71358f"
 
     r = requests.get(URL)
@@ -80,14 +83,25 @@ def get_weather():
         return {}
     return jsonify(r.json())
 
-@app.route('/api/v1/city-info', methods=['GET'])
-def get_city_info():
-    city_name = "Karachi"
-    # URL= "https://en.wikivoyage.org/wiki/"+ city_name
-    URL = "https://www.google.com/search?ei=7_bLX42RDrGD8gL7r7TADg&q=quaid+e+azam+tomb&oq=quaid+e+azam+tomb&gs_lcp=CgZwc3ktYWIQA1DNDljqGWC-G2gAcAB4AIABAIgBAJIBAJgBAKABAaoBB2d3cy13aXrAAQE&sclient=psy-ab&ved=0ahUKEwjNxK-F4LftAhWxgVwKHfsXDegQ4dUDCA0&uact=5"
+@app.route('/api/v1/location-info', methods=['GET'])
+def get_location_info():
+    location_name = request.args.get('location')
+    URL = "https://www.google.com/search?ei=7_bLX42RDrGD8gL7r7TADg&q="+ location_name +"&oq=quaid+e+azam+tomb&gs_lcp=CgZwc3ktYWIQA1DNDljqGWC-G2gAcAB4AIABAIgBAJIBAJgBAKABAaoBB2d3cy13aXrAAQE&sclient=psy-ab&ved=0ahUKEwjNxK-F4LftAhWxgVwKHfsXDegQ4dUDCA0&uact=5"
 
-    e = Extractor.from_yaml_string(city_yml)
+    e = Extractor.from_yaml_string(location_yml)
     r = requests.get(URL)
     if r.status_code > 500:
         return {}
     return jsonify(e.extract(r.text))
+
+@app.route('/api/v1/videos', methods=['GET'])
+def get_videos():
+    topic = "Quaid+e+azam+tomb"
+    URL = "https://www.youtube.com/results?search_query=" + topic
+
+    e = Extractor.from_yaml_string(videos_yml)
+    r = requests.get(URL)
+    print(e.extract(r.text))
+    if r.status_code > 500:
+        return {}
+    return ((r.text))
